@@ -8,7 +8,7 @@ command-line and prints the result.
 
     class Sum(flagparse.Command):
 
-        help = "specify integers to get the sum"
+        name = "sum"
         description = "sum the integers at the command line"
 
         arguments = [
@@ -19,20 +19,29 @@ command-line and prints the result.
                   help="integers to be summed")),
         ]
 
-        def handle(self, args):
+        def handle(self, args: flagparse.Namespace) -> None:
+            if len(args.integers) < 2:
+                raise flagparse.ExitError(1, "at least 2 integers expected")
             print(sum(args.integers))
-            return flagparse.ExitStatus.Success
 
-    sys.exit(Sum("sum").parse().value)
+    Sum().parse()
+
+
+The module contains the following public classes:
+
+    - Command
+    - SubCommand
+    - ExitError
 """
 
 __version__ = "0.0.1"
 
 
 import argparse
-import enum
+import io
+import sys
 
-from typing import Sequence, Optional
+from typing import Any, Sequence, Optional, Union
 
 
 class Namespace(argparse.Namespace):
@@ -40,9 +49,14 @@ class Namespace(argparse.Namespace):
     pass
 
 
-class ExitStatus(enum.Enum):
-    Success = 0
-    Failure = 1
+class ExitError(Exception):
+    """Exception used to specify flag handling error."""
+
+    def __init__(self, code: int = 0, message: str = ""):
+        self.code = code
+        self.message = message
+
+        super().__init__(f"{self.code}, message={self.message}")
 
 
 class _Formatter(argparse.ArgumentDefaultsHelpFormatter):
@@ -59,25 +73,42 @@ class _Formatter(argparse.ArgumentDefaultsHelpFormatter):
         super().__init__(prog, indent_increment, max_help_position, width)
 
 
+class _Attr:
+
+    def __init__(self, name: str, required: Union[bool] = False):
+        self.name = name
+        self.required = bool(required)
+
+
+class _Meta(Namespace):
+    """Holds meta information about command or sub-command."""
+
+    def __init__(self, obj: Any, attributes: Sequence[_Attr]):
+        attrs = {}
+        for attr in attributes:
+            attr_val = getattr(obj, attr.name, None)
+            if attr.required and attr_val is None:
+                raise ValueError(f"required attribute {attr.name} is missing")
+            attrs[attr.name] = attr_val
+        super().__init__(**attrs)
+
+
 class SubCommand:
     """Parser for sub-commands of the parent command."""
 
     __attributes__ = [
-        "name",
-        "aliases",
-        "arguments",
-        "help",
-        "description",
-        "subcommands",
+        _Attr("name", required=True),
+        _Attr("aliases"),
+        _Attr("arguments"),
+        _Attr("help"),
+        _Attr("description"),
+        _Attr("subcommands"),
     ]
 
     def __init__(self, subparsers):
-        # Copy all meta parameters of the command into the __meta__ dictionary,
-        # so it can be accessible during the setup of commands.
-        attrs = {attr: getattr(self, attr, None)
-                 for attr in self.__attributes__}
-
-        self.__meta__ = Namespace(**attrs)
+        # Copy all meta parameters of the command into the __meta__
+        # dictionary, so it can be accessible during the setup of commands.
+        self.__meta__ = _Meta(self, self.__attributes__)
         self.subcommands = []
 
         self.subparser = subparsers.add_parser(
@@ -95,38 +126,61 @@ class SubCommand:
 
         if self.__meta__.subcommands:
             subparsers = self.subparser.add_subparsers(dest=self.__meta__.name)
-            self.subcommands = [c(subparsers) for c in self.__meta__.subcommands]
+            self.subcommands = [c(subparsers) for c in
+                                self.__meta__.subcommands]
 
-    def handle(self, args: Namespace) -> ExitStatus:
+    def handle(self, args: Namespace):
         self.subparser.print_help()
-        return ExitStatus.Success
 
 
 class Command:
     """Parser for parsing command line strings and handling commands.
 
     Arguments:
-        name -- name of the command
         subcommands -- optional list of sub-commands
     """
 
-    def __init__(self, name: str, subcommands: Optional[SubCommand] = None):
+    __attributes__ = [
+        _Attr("name", required=True),
+        _Attr("arguments"),
+        _Attr("description"),
+    ]
+
+    def __init__(self, subcommands: Optional[SubCommand] = None):
+        self.__meta__ = _Meta(self, self.__attributes__)
+
         self.parser = argparse.ArgumentParser(
-            prog=name, formatter_class=_Formatter)
+            formatter_class=_Formatter,
+            prog=self.__meta__.name,
+            description=self.__meta__.description,
+        )
 
         self.parser.set_defaults(func=self.handle)
 
-        for args, kwargs in self.arguments:
+        for args, kwargs in self.__meta__.arguments or []:
             self.parser.add_argument(*args, **kwargs)
 
         if subcommands:
             subparsers = self.parser.add_subparsers()
             self.subcommands = [c(subparsers) for c in subcommands]
 
-    def handle(self, args: Namespace) -> ExitStatus:
+    def handle(self, args: Namespace) -> None:
         self.parser.print_help()
-        return ExitStatus.Failure
 
-    def parse(self):
-        args = self.parser.parse_args()
-        return args.func(args=Namespace(**args.__dict__))
+    def parse(self,
+              args: Optional[Sequence[str]] = None,
+              errlog: io.TextIOBase = sys.stderr):
+        try:
+            args = self.parser.parse_args(args)
+            return args.func(args=Namespace(**args.__dict__))
+        except ExitError as e:
+            if e.message:
+                errlog.write(f"{e.message}\n")
+                errlog.flush()
+            sys.exit(e.code)
+        except Exception as e:
+            errlog.write(f"{e}\n")
+            errlog.flush()
+            sys.exit(1)
+        finally:
+            sys.exit(0)

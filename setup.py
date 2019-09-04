@@ -27,10 +27,13 @@ setuptools.setup(
         "Intended Audience :: Developers",
         "License :: OSI Approved :: MIT License",
         "Topic :: Software Development :: Libraries",
+
+        'Programming Language :: Python :: 3',
+        'Programming Language :: Python :: 3.4',
+        'Programming Language :: Python :: 3.5',
+        'Programming Language :: Python :: 3.6',
     ],
 
-    packages=setuptools.find_packages(exclude=["tests"]),
-    install_requires=[
-        "enum",
-    ],
+    keywords="arguments cli parse",
+    packages=["flagparse"],
 )
