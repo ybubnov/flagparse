@@ -29,9 +29,16 @@ command-line and prints the result.
 
 The module contains the following public classes:
 
-    - Command
-    - SubCommand
-    - ExitError
+    - Command -- The main entry point for parsing arguments of the program. It
+                 can specify either a self-sufficient command or define a
+                 hierarchy of sub-commands.
+
+    - SubCommand -- The sub-command for building complex nested command-line
+                    interfaces.
+
+    - ExitError -- The exception to specify what error should be returned
+                   by the program. It is a placeholder for exit code and
+                   optional message that will be shown before the exit.
 """
 
 __version__ = "0.0.1"
@@ -146,7 +153,8 @@ class Command:
         _Attr("description"),
     ]
 
-    def __init__(self, subcommands: Optional[SubCommand] = None):
+    def __init__(self,
+                 subcommands: Optional[Sequence[SubCommand]] = None):
         self.__meta__ = _Meta(self, self.__attributes__)
 
         self.parser = argparse.ArgumentParser(
