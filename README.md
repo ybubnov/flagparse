@@ -25,5 +25,5 @@ The openflow library is distributed under MIT license, therefore you are free
 to do with code whatever you want. See the [LICENSE](LICENSE) file for full
 license text.
 
-[BuildStatus] https://travis-ci.org/ybubnov/flagparse.svg?branch=master
-[Wiki] https://github.com/ybubnov/flagparse/wiki
+[BuildStatus]: https://travis-ci.org/ybubnov/flagparse.svg?branch=master
+[Wiki]: https://github.com/ybubnov/flagparse/wiki
