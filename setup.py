@@ -35,5 +35,5 @@ setuptools.setup(
 
     python_requires=">=3.6",
     keywords="arguments cli parse",
-    packages=["flagparse"],
+    py_modules=["flagparse"],
 )
