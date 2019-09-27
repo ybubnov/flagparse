@@ -57,7 +57,12 @@ class Namespace(argparse.Namespace):
 
 
 class ExitError(Exception):
-    """Exception used to specify flag handling error."""
+    """Exception used to specify flag handling error.
+
+    Attributes:
+        code -- process exit code
+        message -- optional message printed before exit
+    """
 
     def __init__(self, code: int = 0, message: str = ""):
         self.code = code
@@ -101,7 +106,11 @@ class _Meta(Namespace):
 
 
 class SubCommand:
-    """Parser for sub-commands of the parent command."""
+    """Parser for sub-commands of the parent command.
+
+    Attributes:
+        subparsers -- a list of argument sub-parsers
+    """
 
     __attributes__ = [
         _Attr("name", required=True),
