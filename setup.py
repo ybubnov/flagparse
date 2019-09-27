@@ -17,7 +17,7 @@ setuptools.setup(
 
     long_description=long_description,
     long_description_content_type="text/markdown",
-    description="flagparse is library to parse flags",
+    description="flagparse is library to build command-line interfaces",
 
     url="https://github.com/ybubnov/flagparse",
     author="Yasha Bubnov",
@@ -28,10 +28,10 @@ setuptools.setup(
         "License :: OSI Approved :: MIT License",
         "Topic :: Software Development :: Libraries",
 
-        'Programming Language :: Python :: 3',
-        'Programming Language :: Python :: 3.4',
-        'Programming Language :: Python :: 3.5',
-        'Programming Language :: Python :: 3.6',
+        "Programming Language :: Python :: 3",
+        "Programming Language :: Python :: 3.4",
+        "Programming Language :: Python :: 3.5",
+        "Programming Language :: Python :: 3.6",
     ],
 
     keywords="arguments cli parse",
