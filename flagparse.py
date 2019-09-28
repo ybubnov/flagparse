@@ -21,7 +21,7 @@ command-line and prints the result.
 
         def handle(self, args: flagparse.Namespace) -> None:
             if len(args.integers) < 2:
-                raise flagparse.ExitError(1, "at least 2 integers expected")
+                raise flagparse.ExitError("at least 2 integers expected")
             print(sum(args.integers))
 
     Sum().parse()
@@ -41,7 +41,7 @@ The module contains the following public classes:
                    optional message that will be shown before the exit.
 """
 
-__version__ = "0.0.1"
+__version__ = "0.0.2"
 
 
 import argparse
@@ -64,7 +64,7 @@ class ExitError(Exception):
         message -- optional message printed before exit
     """
 
-    def __init__(self, code: int = 0, message: str = ""):
+    def __init__(self, code: int = 1, message: str = ""):
         self.code = code
         self.message = message
 
