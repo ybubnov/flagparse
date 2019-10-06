@@ -1,10 +1,10 @@
-import flagparse
-
 import os
+import sys
 import setuptools
 
 
 here = os.path.abspath(os.path.dirname(__file__))
+sys.path.insert(0, here)
 
 # Get the long description from the README file.
 with open(os.path.join(here, "README.md"), encoding="utf-8") as md:
@@ -13,7 +13,7 @@ with open(os.path.join(here, "README.md"), encoding="utf-8") as md:
 
 setuptools.setup(
     name="flagparse",
-    version=flagparse.__version__,
+    version=__import__("flagparse").__version__,
 
     long_description=long_description,
     long_description_content_type="text/markdown",
