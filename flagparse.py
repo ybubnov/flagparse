@@ -41,12 +41,13 @@ The module contains the following public classes:
                    optional message that will be shown before the exit.
 """
 
-__version__ = "0.0.2"
+__version__ = "0.0.3"
 
 
 import argparse
 import io
 import sys
+import traceback
 
 from typing import Any, Sequence, Optional, Union
 
@@ -186,10 +187,16 @@ class Command:
 
     def parse(self,
               args: Optional[Sequence[str]] = None,
+              trace: bool = False,
               errlog: io.TextIOBase = sys.stderr):
         try:
-            args = self.parser.parse_args(args)
-            return args.func(args=Namespace(**args.__dict__))
+            try:
+                args = self.parser.parse_args(args)
+                return args.func(args=Namespace(**args.__dict__))
+            except Exception as e:
+                if trace:
+                    traceback.print_exc()
+                raise e
         except ExitError as e:
             if e.message:
                 errlog.write(f"{e.message}\n")
